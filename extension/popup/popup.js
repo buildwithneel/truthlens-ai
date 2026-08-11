@@ -20,6 +20,7 @@ const elFps         = document.getElementById('tl-fps');
 const elLatency     = document.getElementById('tl-latency');
 const elBtnStart    = document.getElementById('btn-start');
 const elBtnStop     = document.getElementById('btn-stop');
+const elBtnDetector = document.getElementById('btn-detector');
 const elVersion     = document.getElementById('tl-provider-version');
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
@@ -79,6 +80,14 @@ elBtnStop.addEventListener('click', async () => {
   elBtnStop.disabled = true;
   await sendAction('STOP_PROTECTION');
   await fetchState();
+});
+
+// ── Open Detector ─────────────────────────────────────────────────────────────
+// Opens detector.html as a full extension tab.
+// getUserMedia() works there because the page runs at chrome-extension:// origin.
+elBtnDetector.addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('detector/detector.html') });
+  window.close(); // close the popup so it doesn't linger
 });
 
 // ─── Live metrics polling ─────────────────────────────────────────────────────

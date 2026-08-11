@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TruthLens AI – Offscreen</title>
+  <!--
+    TruthLens AI – Offscreen Document
+    ===================================
+    This is a HIDDEN, PERSISTENT extension-owned page (chrome-extension:// origin).
+    It is never shown to the user.
+
+    Why this page exists
+    ─────────────────────
+    Chrome Manifest V3 prohibits navigator.mediaDevices.getUserMedia() from:
+      • Service workers (no DOM, no MediaStream API)
+      • Content scripts  (blocked by Chrome permission policy since Chrome 88)
+
+    An Offscreen Document IS a proper browsing context owned by the extension,
+    so getUserMedia() works correctly here and Chrome shows the permission prompt
+    under the extension's identity, not the host page's origin.
+
+    What this page does
+    ────────────────────
+    1. Loads all pipeline modules as normal <script> tags (shared globals).
+    2. offscreen.js orchestrates the full detection pipeline:
+         getUserMedia → VideoSource → FaceDetector → InferenceProvider → RiskEngine
+    3. Sends UPDATE_METRICS messages to the service worker on each processed frame.
+    4. Listens for START_PIPELINE / STOP_PIPELINE from the service worker.
+
+    What this page does NOT do
+    ───────────────────────────
+    • It is never appended to any visible UI.
+    • It never uploads camera frames anywhere.
+    • It never communicates directly with content scripts
+      (all routing goes through the service worker).
+  -->
+</head>
+<body>
+  <!-- Pipeline modules – order matters (later scripts depend on earlier globals) -->
+  <script src="../utils/logger.js"></script>
+  <script src="../risk/risk-engine.js"></script>
+  <script src="../inference/inference-provider.js"></script>
+  <script src="../detection/face-detector.js"></script>
+  <script src="../capture/video-source.js"></script>
+
+  <!-- Offscreen orchestrator (must be last) -->
+  <script src="offscreen.js"></script>
+</body>
+</html>

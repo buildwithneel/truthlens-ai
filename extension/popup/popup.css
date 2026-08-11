@@ -166,6 +166,16 @@ body {
   background: rgba(239,68,68,0.22);
 }
 
+.tl-btn-detector {
+  background: rgba(99,102,241,0.12);
+  color:      #a5b4fc;
+  border:     1px solid rgba(99,102,241,0.28);
+}
+
+.tl-btn-detector:hover:not(:disabled) {
+  background: rgba(99,102,241,0.20);
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────────── */
 .tl-popup-footer {
   padding:    8px 14px;

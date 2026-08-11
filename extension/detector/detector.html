@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthLens AI – Camera Detector &amp; Face Crop Pipeline</title>
+  <link rel="stylesheet" href="detector.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="det-header">
+    <div class="det-logo-row">
+      <span class="det-logo">TRUTHLENS AI</span>
+      <span class="det-tag">Camera Detector + Face Crop Pipeline</span>
+    </div>
+    <p class="det-subtitle">
+      Webcam pipeline with MediaPipe face detection &amp; 224x224 real-time face cropper.<br>
+      <em>No frames are uploaded. No inference runs here.</em>
+    </p>
+  </header>
+
+  <!-- ── Main content ────────────────────────────────────────────────────── -->
+  <main class="det-main">
+
+    <!-- Video shell viewport -->
+    <div class="det-video-shell" id="det-video-shell">
+
+      <!-- Placeholder shown before camera starts -->
+      <div class="det-video-placeholder" id="det-placeholder">
+        <svg class="det-cam-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Camera not started</span>
+      </div>
+
+      <!-- Live camera feed -->
+      <video
+        id="det-video"
+        autoplay
+        playsinline
+        muted
+        aria-label="Live camera feed"
+      ></video>
+
+      <!-- Canvas overlay -->
+      <canvas id="det-canvas" aria-hidden="true"></canvas>
+
+      <!-- Face count label badge (top-left) -->
+      <div class="det-face-label" id="det-face-label" aria-live="polite"></div>
+
+      <!-- Live FPS badge (top-right) -->
+      <div class="det-fps-badge" id="det-fps-badge" aria-live="polite">-- FPS</div>
+
+      <!-- Real-time Deepfake Risk Overlay -->
+      <div class="tl-risk-overlay hidden" id="tl-risk-overlay">
+        <div class="tl-risk-badge" id="tl-risk-badge">
+          <span class="tl-risk-demo-tag hidden" id="tl-risk-demo-tag">DEMO / TEST MODE</span>
+          <span class="tl-risk-status" id="tl-risk-status">WAITING FOR MODEL</span>
+          <div class="tl-risk-details" id="tl-risk-details" style="display: none;">
+            <span class="tl-risk-metric">Manipulation: <strong id="tl-risk-prob">--%</strong></span>
+            <span class="tl-risk-metric">Confidence: <strong id="tl-risk-conf">--%</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Hardware Limited Warning Banner ────────────────────────────────── -->
+    <div class="det-hw-notice" id="det-hw-notice" hidden>
+      <span class="det-hw-icon">⚠️</span>
+      <span id="det-hw-notice-text">Camera hardware/browser currently provides ~10 FPS</span>
+    </div>
+
+    <!-- ── Summary Stats Bar ──────────────────────────────────────────────── -->
+    <div class="det-stats" role="status" aria-live="polite">
+      <div class="det-stat">
+        <span class="det-stat-label">Resolution</span>
+        <span class="det-stat-value" id="det-resolution">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Camera FPS</span>
+        <span class="det-stat-value" id="det-fps-display">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Det. FPS</span>
+        <span class="det-stat-value" id="det-det-fps">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Det. Latency</span>
+        <span class="det-stat-value" id="det-latency">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Crop Latency</span>
+        <span class="det-stat-value" id="det-crop-latency">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Faces</span>
+        <span class="det-stat-value" id="det-face-count">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Scheduler</span>
+        <span class="det-stat-value" id="det-scheduler">--</span>
+      </div>
+      <div class="det-stat">
+        <span class="det-stat-label">Detector</span>
+        <span class="det-stat-value" id="det-model-status">loading…</span>
+      </div>
+    </div>
+
+    <!-- ── Face Cropper Debug Preview Section ────────────────────────────── -->
+    <section class="det-crop-section" id="det-crop-section">
+      <div class="det-crop-header">
+        <h2 class="det-crop-title">Step 6: Face Crop Debug Preview</h2>
+        <span class="det-crop-badge">Model Input: 224 × 224 (20% Padding)</span>
+      </div>
+      <div class="det-crop-body">
+        <!-- Live cropped face preview canvas -->
+        <div class="det-crop-preview-box">
+          <canvas id="det-crop-canvas" width="224" height="224" aria-label="Cropped face preview"></canvas>
+          <span class="det-crop-preview-placeholder" id="det-crop-placeholder">Waiting for face…</span>
+        </div>
+        <!-- Crop details -->
+        <div class="det-crop-details">
+          <div class="det-crop-detail-item">
+            <span class="det-crop-detail-label">Output Size:</span>
+            <span class="det-crop-detail-value" id="crop-output-size">224 × 224 px</span>
+          </div>
+          <div class="det-crop-detail-item">
+            <span class="det-crop-detail-label">Source Rect:</span>
+            <span class="det-crop-detail-value" id="crop-source-rect">--</span>
+          </div>
+          <div class="det-crop-detail-item">
+            <span class="det-crop-detail-label">Padding:</span>
+            <span class="det-crop-detail-value">20% (Forehead, Chin, Cheeks)</span>
+          </div>
+          <div class="det-crop-detail-item">
+            <span class="det-crop-detail-label">Crop Latency:</span>
+            <span class="det-crop-detail-value highlight" id="crop-latency-val">-- ms</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Detailed Performance & Hardware Diagnostics Section ───────────── -->
+    <section class="det-diag-section" aria-label="Performance Diagnostics">
+      <div class="det-diag-header">
+        <h2 class="det-diag-title">Hardware Capabilities &amp; Pipeline Benchmark</h2>
+        <span class="det-diag-badge">Real-Time Metrics</span>
+      </div>
+      <div class="det-diag-grid">
+        <!-- Hardware / Constraint Cards -->
+        <div class="det-diag-card highlight">
+          <span class="det-diag-label">Requested FPS</span>
+          <span class="det-diag-value" id="diag-req-fps">30</span>
+        </div>
+        <div class="det-diag-card highlight">
+          <span class="det-diag-label">Actual Camera FPS</span>
+          <span class="det-diag-value" id="diag-actual-cam-fps">-- FPS</span>
+        </div>
+        <div class="det-diag-card highlight">
+          <span class="det-diag-label">Cam Cap Min FPS</span>
+          <span class="det-diag-value" id="diag-cap-min-fps">--</span>
+        </div>
+        <div class="det-diag-card highlight">
+          <span class="det-diag-label">Cam Cap Max FPS</span>
+          <span class="det-diag-value" id="diag-cap-max-fps">--</span>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="det-diag-card">
+          <span class="det-diag-label">Camera frame rate</span>
+          <span class="det-diag-value" id="diag-cam-fps">-- FPS</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Processing rate</span>
+          <span class="det-diag-value" id="diag-proc-fps">-- FPS</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Detection rate</span>
+          <span class="det-diag-value" id="diag-det-fps">-- FPS</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Detection latency</span>
+          <span class="det-diag-value" id="diag-det-latency">-- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Crop latency</span>
+          <span class="det-diag-value" id="diag-crop-latency">-- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Total process time</span>
+          <span class="det-diag-value" id="diag-total-time">-- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Frame wait time</span>
+          <span class="det-diag-value" id="diag-wait-time">-- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Dropped frames</span>
+          <span class="det-diag-value" id="diag-dropped-frames">0</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Target FPS</span>
+          <span class="det-diag-value" id="diag-target-fps">15</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Camera Diagnostics & Playback Quality Panel ─────────────────────── -->
+    <section class="det-diag-section" aria-label="Camera Track Diagnostics">
+      <div class="det-diag-header">
+        <h2 class="det-diag-title">Camera Track &amp; Playback Quality Inspector</h2>
+        <span class="det-diag-badge">Hardware State</span>
+      </div>
+      <div class="det-diag-grid">
+        <div class="det-diag-card">
+          <span class="det-diag-label">Track Label</span>
+          <span class="det-diag-value" id="det-track-label">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Track Settings FPS</span>
+          <span class="det-diag-value" id="cam-settings-fps">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Avg Frame Interval</span>
+          <span class="det-diag-value" id="cam-avg-interval">-- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Min / Max Interval</span>
+          <span class="det-diag-value" id="cam-minmax-interval">-- / -- ms</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Video readyState</span>
+          <span class="det-diag-value" id="cam-ready-state">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Video Dimensions</span>
+          <span class="det-diag-value" id="cam-video-dims">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Total Video Frames</span>
+          <span class="det-diag-value" id="cam-total-frames">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Dropped / Corrupt</span>
+          <span class="det-diag-value" id="cam-dropped-corrupt">-- / --</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Device ID</span>
+          <span class="det-diag-value" id="cam-device-id">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Deepfake Analysis Dashboard Section ──────────────────────────── -->
+    <section class="det-diag-section" aria-label="Deepfake Analysis">
+      <div class="det-diag-header">
+        <h2 class="det-diag-title">DEEPFAKE ANALYSIS</h2>
+        <span class="det-diag-badge" id="det-analysis-badge" style="background: rgba(255,255,255,0.06); color: var(--text-dim); border-color: var(--border);">
+          WAITING FOR MODEL
+        </span>
+      </div>
+      <div class="det-diag-grid">
+        <div class="det-diag-card">
+          <span class="det-diag-label">Status</span>
+          <span class="det-diag-value" id="det-df-status">WAITING FOR MODEL</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Probability</span>
+          <span class="det-diag-value" id="det-df-prob">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Confidence</span>
+          <span class="det-diag-value" id="det-df-conf">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Risk</span>
+          <span class="det-diag-value" id="det-df-risk">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Inference FPS</span>
+          <span class="det-diag-value" id="det-df-fps">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Inference Latency</span>
+          <span class="det-diag-value" id="det-df-latency">--</span>
+        </div>
+        <div class="det-diag-card">
+          <span class="det-diag-label">Source</span>
+          <span class="det-diag-value" id="det-df-source">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Development Test Controls: Risk Overlay ───────────────────────── -->
+    <section class="det-bench-section">
+      <div class="det-bench-header">
+        <h2 class="det-bench-title">Test Risk Overlay (Development Mode)</h2>
+        <span class="det-tag" style="background: rgba(250,204,21,0.15); color: #facc15; border-color: rgba(250,204,21,0.3);">
+          DEMO / TEST MODE
+        </span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-dim);">
+        Inject test risk values into the overlay UI. Test values do NOT enter the inference pipeline.
+      </p>
+      <div class="det-controls" style="margin-top: 6px;">
+        <button class="det-btn" id="btn-test-safe" style="background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3);">
+          Test SAFE (15%)
+        </button>
+        <button class="det-btn" id="btn-test-suspicious" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3);">
+          Test SUSPICIOUS (50%)
+        </button>
+        <button class="det-btn" id="btn-test-high" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3);">
+          Test HIGH RISK (90%)
+        </button>
+        <button class="det-btn" id="btn-test-reset" style="background: rgba(255,255,255,0.06); color: var(--text-dim); border: 1px solid var(--border);">
+          Reset to Normal Mode
+        </button>
+      </div>
+    </section>
+
+    <!-- ── Deep Capture Diagnostics & Constraint Experiment Runner ────────── -->
+    <section class="det-bench-section">
+      <div class="det-bench-header">
+        <h2 class="det-bench-title">Deep Capture Diagnostics Suite</h2>
+        <button class="det-btn det-btn-bench" id="det-btn-deep-diag">
+          🔬 Run Deep Diagnostics &amp; Constraint Experiments
+        </button>
+      </div>
+      <div class="det-bench-results" id="det-deep-results" hidden>
+        <div class="det-diag-log-box" id="det-diag-log">
+          <!-- Populated during deep diagnostic run -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Status message ─────────────────────────────────────────────────── -->
+    <div class="det-status-bar">
+      <span class="det-status-dot" id="det-status-dot"></span>
+      <span class="det-status-text" id="det-status-text">Ready – click Start Camera</span>
+    </div>
+
+    <!-- ── Error panel (hidden until an error occurs) ─────────────────────── -->
+    <div class="det-error-panel" id="det-error-panel" hidden>
+      <div class="det-error-title" id="det-error-title">Error</div>
+      <div class="det-error-body"  id="det-error-body"></div>
+      <div class="det-error-hint"  id="det-error-hint"></div>
+    </div>
+
+    <!-- ── Controls ───────────────────────────────────────────────────────── -->
+    <div class="det-controls">
+      <button class="det-btn det-btn-start" id="det-btn-start">
+        ▶ Start Camera
+      </button>
+      <button class="det-btn det-btn-stop" id="det-btn-stop" disabled>
+        ■ Stop Camera
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <footer class="det-footer">
+    <span>
+      Camera + face detection + face cropper pipeline run in this extension page (<code>chrome-extension://</code>).
+    </span>
+  </footer>
+
+  <script type="module" src="detector.js"></script>
+</body>
+</html>

@@ -1,0 +1,775 @@
+/* ==========================================================================
+   TruthLens AI – Detector Page Styles
+   Plain CSS, no framework, no Tailwind.
+   ========================================================================== */
+
+/* ── Reset & base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0b0f1a;
+  --surface:     #111827;
+  --surface2:    #1c2333;
+  --border:      rgba(255,255,255,0.08);
+  --accent-blue: #38bdf8;
+  --accent-purp: #818cf8;
+  --green:       #4ade80;
+  --yellow:      #facc15;
+  --red:         #f87171;
+  --text:        #e2e8f0;
+  --text-dim:    #64748b;
+  --radius:      12px;
+  --font:        'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.det-header {
+  padding: 24px 32px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg,
+    rgba(56,189,248,0.07) 0%,
+    rgba(129,140,248,0.05) 100%);
+}
+
+.det-logo-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.det-logo {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purp));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.det-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.det-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.det-subtitle em { color: rgba(250,204,21,0.7); font-style: normal; }
+
+/* ── Main layout ────────────────────────────────────────────────────────── */
+.det-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Video shell ─────────────────────────────────────────────────────────── */
+.det-video-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Placeholder (shown before camera starts) */
+.det-video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  z-index: 1;
+  transition: opacity 0.3s;
+}
+
+.det-video-placeholder.hidden { opacity: 0; pointer-events: none; }
+
+.det-cam-icon {
+  width: 56px;
+  height: 56px;
+  opacity: 0.3;
+}
+
+/* The <video> element */
+#det-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Hidden until stream is attached */
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#det-video.active { opacity: 1; }
+
+/* Canvas overlay – sits directly above the video, pointer-events off
+   so it never blocks interactions on elements behind or in front. */
+#det-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  /* invisible until camera is running */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#det-canvas.active { opacity: 1; }
+
+/* Face count label – top-left of the video shell */
+.det-face-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s, color 0.25s;
+}
+
+.det-face-label.active { opacity: 1; }
+
+/* Colour states for the face label */
+.det-face-label[data-state="none"]     { color: #94a3b8; }
+.det-face-label[data-state="one"]      { color: #4ade80; }
+.det-face-label[data-state="multiple"] { color: #facc15; }
+
+/* FPS badge overlaid on video, top-right */
+.det-fps-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-blue);
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  /* Hidden until running */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.det-fps-badge.active { opacity: 1; }
+
+/* ── Stats bar ───────────────────────────────────────────────────────────── */
+.det-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 860px) {
+  .det-stats { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .det-stats { grid-template-columns: 1fr 1fr; }
+}
+
+.det-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.det-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.det-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Face Cropper Debug Preview Section ────────────────────────────────── */
+.det-crop-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.det-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.det-crop-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.det-crop-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.25);
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+.det-crop-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.det-crop-preview-box {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  background: var(--surface2);
+  border: 2px solid var(--accent-blue);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+
+#det-crop-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.det-crop-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 10px;
+  background: var(--surface2);
+}
+
+.det-crop-preview-placeholder.hidden {
+  display: none;
+}
+
+.det-crop-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.det-crop-detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.det-crop-detail-label {
+  color: var(--text-dim);
+}
+
+.det-crop-detail-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.det-crop-detail-value.highlight {
+  color: var(--green);
+}
+
+/* ── Performance Diagnostics Section ───────────────────────────────────── */
+.det-diag-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.det-diag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.det-diag-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.det-diag-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-blue);
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.25);
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+.det-diag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 650px) {
+  .det-diag-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.det-diag-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.det-diag-card.highlight {
+  background: rgba(56,189,248,0.06);
+  border-color: rgba(56,189,248,0.25);
+}
+
+.det-diag-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.det-diag-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Hardware Notice Banner */
+.det-hw-notice {
+  background: rgba(250,204,21,0.12);
+  border: 1px solid rgba(250,204,21,0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fef08a;
+}
+
+/* Controlled Benchmark Section */
+.det-bench-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.det-bench-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.det-bench-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.det-btn-bench {
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.det-btn-bench:hover:not(:disabled) { opacity: 0.9; }
+
+.det-bench-results {
+  overflow-x: auto;
+}
+
+.det-bench-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.det-bench-table th, .det-bench-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.det-bench-table th {
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.det-bench-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Diagnostic log terminal output box */
+.det-diag-log-box {
+  background: #090d16;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #38bdf8;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+.det-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.det-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.det-status-dot.ready   { background: var(--text-dim); }
+.det-status-dot.running {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(74,222,128,0.25);
+  animation: det-pulse 1.6s ease-in-out infinite;
+}
+.det-status-dot.error   { background: var(--red); }
+.det-status-dot.stopped { background: var(--yellow); }
+
+@keyframes det-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  50%      { box-shadow: 0 0 0 5px rgba(74,222,128,0.25); }
+}
+
+/* ── Error panel ─────────────────────────────────────────────────────────── */
+.det-error-panel {
+  background: rgba(239,68,68,0.10);
+  border: 1px solid rgba(239,68,68,0.30);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.det-error-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.04em;
+}
+
+.det-error-body {
+  font-size: 13px;
+  color: #fca5a5;
+}
+
+.det-error-hint {
+  font-size: 11px;
+  color: rgba(252,165,165,0.65);
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.det-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.det-btn {
+  flex: 1;
+  padding: 11px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.det-btn:active:not(:disabled) { transform: scale(0.97); }
+
+.det-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.det-btn-start {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #fff;
+}
+
+.det-btn-start:hover:not(:disabled) { opacity: 0.88; }
+
+.det-btn-stop {
+  background: rgba(239,68,68,0.14);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.28);
+}
+
+.det-btn-stop:hover:not(:disabled) { background: rgba(239,68,68,0.22); }
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.det-footer {
+  padding: 14px 32px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.det-footer code {
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 10px;
+}
+
+/* ── Risk Overlay Component (Sprint 7) ──────────────────────────────────── */
+.tl-risk-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.tl-risk-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tl-risk-overlay.is-demo .tl-risk-badge {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.tl-risk-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  min-width: 220px;
+}
+
+.tl-risk-demo-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--yellow);
+  background: rgba(250, 204, 21, 0.15);
+  border: 1px dashed var(--yellow);
+  border-radius: 4px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+
+.tl-risk-demo-tag.hidden {
+  display: none;
+}
+
+.tl-risk-status {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tl-risk-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--yellow);
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
+.tl-risk-sub.hidden {
+  display: none;
+}
+
+.tl-risk-details {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.tl-risk-metric strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Badge Risk States */
+.tl-risk-badge.state-safe {
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.2);
+}
+.tl-risk-badge.state-safe .tl-risk-status {
+  color: var(--green);
+}
+
+.tl-risk-badge.state-suspicious {
+  border-color: rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.2);
+}
+.tl-risk-badge.state-suspicious .tl-risk-status {
+  color: var(--yellow);
+}
+
+.tl-risk-badge.state-high-risk {
+  border-color: rgba(248, 113, 113, 0.5);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
+  animation: tl-pulse-red 1.5s infinite;
+}
+.tl-risk-badge.state-high-risk .tl-risk-status {
+  color: var(--red);
+}
+
+.tl-risk-badge.state-no-face .tl-risk-status {
+  color: var(--text-dim);
+}
+
+.tl-risk-badge.state-loading .tl-risk-status {
+  color: var(--accent-blue);
+}
+
+.tl-risk-badge.state-error .tl-risk-status {
+  color: var(--red);
+}
+
+@keyframes tl-pulse-red {
+  0%, 100% { box-shadow: 0 0 10px rgba(248, 113, 113, 0.2); }
+  50% { box-shadow: 0 0 22px rgba(248, 113, 113, 0.5); }
+}

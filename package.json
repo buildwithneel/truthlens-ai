@@ -1,0 +1,27 @@
+{
+  "name": "truthlens-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buildwithneel/truthlens-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/buildwithneel/truthlens-ai/issues"
+  },
+  "homepage": "https://github.com/buildwithneel/truthlens-ai#readme",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.14"
+  }
+}

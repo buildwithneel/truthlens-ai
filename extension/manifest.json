@@ -30,10 +30,6 @@
       "matches": ["<all_urls>"],
       "js": [
         "utils/logger.js",
-        "risk/risk-engine.js",
-        "inference/inference-provider.js",
-        "detection/face-detector.js",
-        "capture/video-source.js",
         "overlay/overlay.js",
         "content/content.js"
       ],
@@ -45,14 +41,23 @@
 
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "offscreen"
   ],
 
   "host_permissions": [],
 
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+
   "web_accessible_resources": [
     {
       "resources": ["overlay/overlay.css", "icons/*"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["detector/detector.html", "lib/*", "lib/wasm/*"],
       "matches": ["<all_urls>"]
     }
   ]
