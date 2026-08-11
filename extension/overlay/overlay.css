@@ -1,0 +1,158 @@
+/* ==========================================================================
+   TruthLens AI – Overlay Styles
+   Plain CSS – no Tailwind, no framework.
+   ========================================================================== */
+
+/* ── Root container ─────────────────────────────────────────────────────── */
+#tl-overlay-root {
+  /* Position: top-right, away from face area and video controls */
+  position:  fixed;
+  top:       16px;
+  right:     16px;
+  z-index:   2147483647; /* max z-index – always on top */
+
+  /* Dimensions */
+  width:      200px;
+  min-height: 120px;
+
+  /* Glassmorphism dark card */
+  background:    rgba(10, 10, 18, 0.82);
+  border:        1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:    0 8px 32px rgba(0, 0, 0, 0.55);
+
+  /* Typography */
+  font-family:    'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size:      12px;
+  color:          #e2e8f0;
+  line-height:    1.4;
+
+  /* Layout */
+  display:        flex;
+  flex-direction: column;
+  gap:            8px;
+  padding:        10px 12px 8px;
+
+  /* Smooth entrance */
+  animation: tl-slide-in 0.25s ease-out;
+  pointer-events: auto;
+  user-select: none;
+}
+
+@keyframes tl-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Header row ─────────────────────────────────────────────────────────── */
+.tl-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+}
+
+.tl-logo {
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color:          #7dd3fc; /* sky-300 */
+}
+
+.tl-close {
+  background:  transparent;
+  border:      none;
+  color:       rgba(255,255,255,0.45);
+  cursor:      pointer;
+  font-size:   11px;
+  line-height: 1;
+  padding:     2px 4px;
+  border-radius: 4px;
+  transition:  color 0.15s, background 0.15s;
+}
+
+.tl-close:hover {
+  color:      #fff;
+  background: rgba(255,255,255,0.10);
+}
+
+/* ── Risk badge ─────────────────────────────────────────────────────────── */
+.tl-badge {
+  text-align:     center;
+  font-size:      13px;
+  font-weight:    700;
+  letter-spacing: 0.06em;
+  padding:        4px 8px;
+  border-radius:  6px;
+  transition:     background 0.3s, color 0.3s;
+
+  /* Default (unknown) */
+  background: rgba(100,116,139,0.35);
+  color:      #cbd5e1;
+}
+
+.tl-badge[data-status="LOW"] {
+  background: rgba(34, 197, 94, 0.20);
+  color:      #4ade80;
+  border:     1px solid rgba(34,197,94,0.30);
+}
+
+.tl-badge[data-status="SUSPICIOUS"] {
+  background: rgba(234,179,8,0.20);
+  color:      #facc15;
+  border:     1px solid rgba(234,179,8,0.30);
+}
+
+.tl-badge[data-status="HIGH"] {
+  background: rgba(239,68,68,0.22);
+  color:      #f87171;
+  border:     1px solid rgba(239,68,68,0.35);
+  /* Subtle pulse for attention */
+  animation:  tl-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tl-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 5px rgba(239,68,68,0.25); }
+}
+
+/* ── Metrics grid ───────────────────────────────────────────────────────── */
+.tl-metrics {
+  display:               grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:                   4px;
+}
+
+.tl-metric {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  background:     rgba(255,255,255,0.05);
+  border-radius:  6px;
+  padding:        4px 2px;
+}
+
+.tl-metric-label {
+  font-size:      9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color:          rgba(255,255,255,0.40);
+  margin-bottom:  1px;
+}
+
+.tl-metric-value {
+  font-size:   13px;
+  font-weight: 600;
+  color:       #f1f5f9;
+}
+
+/* ── Mock notice ────────────────────────────────────────────────────────── */
+.tl-mock-notice {
+  font-size:  9px;
+  color:      rgba(255,204,0,0.60);
+  text-align: center;
+  padding-top: 2px;
+  border-top:  1px solid rgba(255,255,255,0.07);
+}

@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "TruthLens AI",
+  "short_name": "TruthLens",
+  "version": "0.1.0",
+  "description": "Real-time deepfake detection overlay for video calls. Prototype – uses mock inference only.",
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "TruthLens AI",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png"
+    }
+  },
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "utils/logger.js",
+        "risk/risk-engine.js",
+        "inference/inference-provider.js",
+        "detection/face-detector.js",
+        "capture/video-source.js",
+        "overlay/overlay.js",
+        "content/content.js"
+      ],
+      "css": ["overlay/overlay.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["overlay/overlay.css", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

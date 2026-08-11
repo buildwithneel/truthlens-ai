@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TruthLens AI – real-time deepfake detection status" />
+  <title>TruthLens AI</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="tl-popup-header">
+    <span class="tl-popup-logo">TRUTHLENS AI</span>
+    <span class="tl-popup-version" id="tl-provider-version">mock-v0</span>
+  </header>
+
+  <!-- ── Protection toggle ──────────────────────────────────────────────── -->
+  <section class="tl-popup-section" aria-label="Protection status">
+    <div class="tl-row">
+      <span class="tl-label">Protection</span>
+      <span class="tl-pill" id="tl-protection-pill">OFF</span>
+    </div>
+  </section>
+
+  <!-- ── Metrics ────────────────────────────────────────────────────────── -->
+  <section class="tl-popup-section tl-metrics-grid" aria-label="Detection metrics">
+    <div class="tl-metric-card">
+      <span class="tl-metric-card-label">Current Risk</span>
+      <span class="tl-metric-card-value" id="tl-risk-pct">--%</span>
+    </div>
+    <div class="tl-metric-card">
+      <span class="tl-metric-card-label">Status</span>
+      <span class="tl-metric-card-value tl-status-text" id="tl-status-text">--</span>
+    </div>
+    <div class="tl-metric-card">
+      <span class="tl-metric-card-label">FPS</span>
+      <span class="tl-metric-card-value" id="tl-fps">--</span>
+    </div>
+    <div class="tl-metric-card">
+      <span class="tl-metric-card-label">Latency</span>
+      <span class="tl-metric-card-value" id="tl-latency">--</span>
+    </div>
+  </section>
+
+  <!-- ── Action buttons ─────────────────────────────────────────────────── -->
+  <section class="tl-popup-section tl-actions" aria-label="Protection controls">
+    <button class="tl-btn tl-btn-start" id="btn-start">▶ Start Protection</button>
+    <button class="tl-btn tl-btn-stop"  id="btn-stop">■ Stop Protection</button>
+  </section>
+
+  <!-- ── Mock notice ────────────────────────────────────────────────────── -->
+  <footer class="tl-popup-footer">
+    ⚠ Uses mock inference — not real detection
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
